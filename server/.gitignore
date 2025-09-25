@@ -1,0 +1,53 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build artifacts
+bin/
+build/
+dist/
+*.log
+
+# Go modules cache
+go.sum
+vendor/
+
+# Go workspace files (Go 1.18+)
+go.work
+go.work.sum
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.swm
+*.iml
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.*
+!env.example
+
+# Docker
+docker-compose.override.yml
+
+# Coverage & test
+coverage.out
+cover.out
+*.coverprofile
+*.prof
+
+# Local tools
+tmp/
+local/
