@@ -14,6 +14,17 @@ services:
       target: final
     ports:
       - 4000:4000
+    environment:
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
+      - DB_NAME=${DB_NAME:-football_api}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - JWT_EXPIRES_HOURS=${JWT_EXPIRES_HOURS:-24}
+      - FOOTBALL_API_TOKEN=${FOOTBALL_API_TOKEN}
+      - FOOTBALL_API_URL=${FOOTBAL_API_URL:-https://api.football-data.org/v4}
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
@@ -33,8 +44,12 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${DBNAME:-postgres}
-      - POSTGRES_PASSWORD=${DBPASSWORD:-change_this_password}
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
+      - DB_NAME=${DB_NAME:-football_api}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
     expose:
       - 5432
     healthcheck:

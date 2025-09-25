@@ -1,37 +1,76 @@
 package config
 
 import (
-	"log"
 	"os"
+	"strconv"
 )
 
-// Config armazena as configurações da aplicação
 type Config struct {
-	DatabaseURL    string
-	JWTSecret      string
-	FootballAPIKey string
-	Port           string
+	Database    DatabaseConfig
+	JWT         JWTConfig
+	FootballAPI FootballAPIConfig
+	Server      ServerConfig
 }
 
-// LoadConfig carrega as configurações a partir das variáveis de ambiente
-func LoadConfig() *Config {
-	cfg := &Config{
-		DatabaseURL:    getEnv("DATABASE_URL", "user=postgres password=password dbname=futebol_api sslmode=disable"),
-		JWTSecret:      getEnv("JWT_SECRET", "default_secret_key"),
-		FootballAPIKey: getEnv("FOOTBALL_API_KEY", ""),
-		Port:           getEnv("PORT", "4000"),
-	}
-
-	if cfg.FootballAPIKey == "" {
-		log.Println("AVISO: FOOTBALL_API_KEY não está definida.")
-	}
-
-	return cfg
+type DatabaseConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Name     string
+	SSLMode  string
 }
 
-func getEnv(key string, defaultVal string) string {
-	if value, exists := os.LookupEnv(key); exists {
+type JWTConfig struct {
+	Secret       string
+	ExpiresHours int
+}
+
+type FootballAPIConfig struct {
+	Token string
+	URL   string
+}
+
+type ServerConfig struct {
+	Port string
+}
+
+func Load() *Config {
+	return &Config{
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnvInt("DB_PORT", 5432),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASS", "postgres"),
+			Name:     getEnv("DB_NAME", "football_api"),
+			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		},
+		JWT: JWTConfig{
+			Secret:       getEnv("JWT_SECRET", "default-secret-key"),
+			ExpiresHours: getEnvInt("JWT_EXPIRES_HOURS", 24),
+		},
+		FootballAPI: FootballAPIConfig{
+			Token: getEnv("FOOTBALL_API_TOKEN", ""),
+			URL:   getEnv("FOOTBALL_API_URL", "https://api.football-data.org/v4"),
+		},
+		Server: ServerConfig{
+			Port: getEnv("SERVER_PORT", "8080"),
+		},
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
 		return value
 	}
-	return defaultVal
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
+	}
+	return defaultValue
 }
