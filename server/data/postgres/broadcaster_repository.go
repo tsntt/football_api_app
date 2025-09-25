@@ -1,0 +1,62 @@
+package data
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/tsntt/footballapi/pkg/broadcaster"
+)
+
+type BroadcastRepository struct {
+	db *sqlx.DB
+}
+
+func NewBroadcastRepository(db *sqlx.DB) *BroadcastRepository {
+	return &BroadcastRepository{db: db}
+}
+
+func (r *BroadcastRepository) Create(ctx context.Context, broadcast *broadcaster.BroadcastMessage) error {
+	query := `
+		INSERT INTO broadcast_messages (match_id, message, status) 
+		VALUES ($1, $2, $3) 
+		RETURNING id, sent_at`
+
+	err := r.db.QueryRowContext(ctx, query, broadcast.MatchID, broadcast.Message, broadcast.Status).
+		Scan(&broadcast.ID, &broadcast.SentAt)
+
+	if err != nil {
+		return fmt.Errorf("failed to create broadcast message: %w", err)
+	}
+
+	return nil
+}
+
+// TODO: make it generic
+func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*broadcaster.BroadcastMessage, error) {
+	broadcast := &broadcaster.BroadcastMessage{}
+	query := `SELECT id, match_id, message, sent_at, status FROM broadcast_messages WHERE match_id = $1`
+
+	err := r.db.GetContext(ctx, broadcast, query, matchID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("broadcast message not found")
+		}
+		return nil, fmt.Errorf("failed to get broadcast message: %w", err)
+	}
+
+	return broadcast, nil
+}
+
+func (r *BroadcastRepository) Update(ctx context.Context, broadcast *broadcaster.BroadcastMessage) error {
+	query := `UPDATE broadcast_messages SET message = $1, status = $2 WHERE id = $3`
+
+	_, err := r.db.ExecContext(ctx, query, broadcast.Message, broadcast.Status, broadcast.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update broadcast message: %w", err)
+	}
+
+	return nil
+}
