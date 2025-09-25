@@ -20,3 +20,8 @@ type APIResponse struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
+
+type FanRequest struct {
+	UserID int    `json:"user_id" validate:"required"`
+	Team   string `json:"team" validate:"required"`
+}
