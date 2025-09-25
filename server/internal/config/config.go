@@ -6,10 +6,19 @@ import (
 )
 
 type Config struct {
-	Database    DatabaseConfig
-	JWT         JWTConfig
-	FootballAPI FootballAPIConfig
-	Server      ServerConfig
+	DatabaseURL    string
+	JWTSecret      string
+	FootballAPIKey string
+	Port           string
+}
+
+// Get var from enviroment
+func Load() *Config {
+	cfg := &Config{
+		DatabaseURL:    getEnv("DATABASE_URL", "user=postgres password=password dbname=futebol_api sslmode=disable"),
+		JWTSecret:      getEnv("JWT_SECRET", "default_secret_key"),
+		FootballAPIKey: getEnv("FOOTBALL_API_KEY", ""),
+		Port:           getEnv("PORT", "4000"),
 }
 
 type DatabaseConfig struct {
