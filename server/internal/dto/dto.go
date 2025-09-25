@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/tsntt/footballapi/internal/model"
+
 type UserRequest struct {
 	Name     string `json:"name" validate:"required,min=2,max=50"`
 	Password string `json:"password" validate:"required,min=6"`
@@ -19,4 +21,12 @@ type JWTClaims struct {
 type APIResponse struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
+}
+
+type ChampionshipsResponse struct {
+	Competitions []model.Championship `json:"competitions"`
+}
+
+type MatchesResponse struct {
+	Matches []model.Match `json:"matches"`
 }
