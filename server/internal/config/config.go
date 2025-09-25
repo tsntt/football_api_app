@@ -14,7 +14,7 @@ type Config struct {
 }
 
 // LoadConfig carrega as configurações a partir das variáveis de ambiente
-func LoadConfig() *Config {
+func Load() *Config {
 	cfg := &Config{
 		DatabaseURL:    getEnv("DATABASE_URL", "user=postgres password=password dbname=futebol_api sslmode=disable"),
 		JWTSecret:      getEnv("JWT_SECRET", "default_secret_key"),
