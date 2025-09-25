@@ -30,3 +30,8 @@ type ChampionshipsResponse struct {
 type MatchesResponse struct {
 	Matches []model.Match `json:"matches"`
 }
+
+type FanRequest struct {
+	UserID int    `json:"user_id" validate:"required"`
+	Team   string `json:"team" validate:"required"`
+}
