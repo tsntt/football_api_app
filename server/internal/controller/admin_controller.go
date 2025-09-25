@@ -7,11 +7,13 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/tsntt/footballapi/internal/dto"
+	"github.com/tsntt/footballapi/internal/model"
+	"github.com/tsntt/footballapi/pkg/broadcaster"
 )
 
 type AdminController struct {
 	externalAPI      model.IChampionshipAPI
-	fanRepo          model.FanRepository
+	fanRepo          model.IFanRepository
 	broadcastRepo    broadcaster.IBroadcastRepository
 	broadcastService broadcaster.IBroadcastService
 	validator        *validator.Validate
@@ -19,7 +21,7 @@ type AdminController struct {
 
 func NewAdminController(
 	externalAPI model.IChampionshipAPI,
-	fanRepo model.FanRepository,
+	fanRepo model.IFanRepository,
 	broadcastRepo broadcaster.IBroadcastRepository,
 	broadcastService broadcaster.IBroadcastService,
 ) *AdminController {
