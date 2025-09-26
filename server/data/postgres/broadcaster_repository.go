@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/tsntt/footballapi/pkg/broadcaster"
+	"github.com/tsntt/footballapi/internal/model"
 )
 
 type BroadcastRepository struct {
@@ -18,7 +18,7 @@ func NewBroadcastRepository(db *sqlx.DB) *BroadcastRepository {
 	return &BroadcastRepository{db: db}
 }
 
-func (r *BroadcastRepository) Create(ctx context.Context, broadcast *broadcaster.BroadcastMessage) error {
+func (r *BroadcastRepository) Create(ctx context.Context, broadcast *model.BroadcastMessage) error {
 	query := `
 		INSERT INTO broadcast_messages (match_id, message, status) 
 		VALUES ($1, $2, $3) 
@@ -34,9 +34,8 @@ func (r *BroadcastRepository) Create(ctx context.Context, broadcast *broadcaster
 	return nil
 }
 
-// TODO: make it generic
-func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*broadcaster.BroadcastMessage, error) {
-	broadcast := &broadcaster.BroadcastMessage{}
+func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*model.BroadcastMessage, error) {
+	broadcast := &model.BroadcastMessage{}
 	query := `SELECT id, match_id, message, sent_at, status FROM broadcast_messages WHERE match_id = $1`
 
 	err := r.db.GetContext(ctx, broadcast, query, matchID)
@@ -50,7 +49,7 @@ func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*b
 	return broadcast, nil
 }
 
-func (r *BroadcastRepository) Update(ctx context.Context, broadcast *broadcaster.BroadcastMessage) error {
+func (r *BroadcastRepository) Update(ctx context.Context, broadcast *model.BroadcastMessage) error {
 	query := `UPDATE broadcast_messages SET message = $1, status = $2 WHERE id = $3`
 
 	_, err := r.db.ExecContext(ctx, query, broadcast.Message, broadcast.Status, broadcast.ID)
