@@ -35,7 +35,7 @@ func NewAdminController(
 }
 
 func (c *AdminController) GetMatches(ctx context.Context) ([]model.Match, error) {
-	// TODO: implement caching for production
+	// INFO: should be cached for production
 	championships, err := c.externalAPI.GetChampionships(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get championships: %w", err)
@@ -69,12 +69,7 @@ func (c *AdminController) GetMatches(ctx context.Context) ([]model.Match, error)
 	return filteredMatches, nil
 }
 
-func (c *AdminController) BroadcastMatch(ctx context.Context, matchIDStr string) (*dto.APIResponse, error) {
-	matchID, err := strconv.Atoi(matchIDStr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid match ID: %w", err)
-	}
-
+func (c *AdminController) BroadcastMatch(ctx context.Context, matchID int) (*dto.APIResponse, error) {
 	// Check if broadcast already sent for this match, avoid duplicates
 	existing, err := c.broadcastRepo.GetByMatchID(ctx, matchID)
 	if err == nil && existing != nil {
@@ -88,12 +83,12 @@ func (c *AdminController) BroadcastMatch(ctx context.Context, matchIDStr string)
 		return nil, fmt.Errorf("failed to get match details: %w", err)
 	}
 
-	homeFans, err := c.fanRepo.GetByTeam(ctx, match.HomeTeam.Name)
+	homeFans, err := c.fanRepo.GetByTeamID(ctx, match.HomeTeam.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home team fans: %w", err)
 	}
 
-	awayFans, err := c.fanRepo.GetByTeam(ctx, match.AwayTeam.Name)
+	awayFans, err := c.fanRepo.GetByTeamID(ctx, match.AwayTeam.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get away team fans: %w", err)
 	}
@@ -112,10 +107,10 @@ func (c *AdminController) BroadcastMatch(ctx context.Context, matchIDStr string)
 			ID:      fmt.Sprintf("fan_%d", i),
 			Type:    "user",
 			Address: strconv.Itoa(fan.UserID),
-			Metadata: map[string]string{
-				"team":     fan.Team,
-				"fan_id":   strconv.Itoa(fan.ID),
-				"match_id": matchIDStr,
+			Metadata: map[string]int{
+				"team_id":  fan.TeamID,
+				"fan_id":   fan.ID,
+				"match_id": matchID,
 			},
 		})
 	}

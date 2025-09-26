@@ -1,9 +1,12 @@
 package broadcaster
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -77,7 +80,7 @@ func (s *BroadcastService) processNotification(job NotificationJob) Notification
 	var wg sync.WaitGroup
 	results := make(chan NotificationResult, len(job.Targets))
 
-	// Enviar notificações para todos os alvos em paralelo
+	// Send notifications to all targets in parallel
 	for _, target := range job.Targets {
 		wg.Add(1)
 		go func(t NotificationTarget) {
@@ -85,7 +88,6 @@ func (s *BroadcastService) processNotification(job NotificationJob) Notification
 
 			var err error
 
-			// Escolher método de envio baseado no tipo
 			switch t.Type {
 			case "user":
 				err = s.sendToUser(t.Address, job.Message)
@@ -113,13 +115,11 @@ func (s *BroadcastService) processNotification(job NotificationJob) Notification
 		}(target)
 	}
 
-	// Aguardar todas as notificações
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
 
-	// Coletar resultados
 	var errors []error
 	var allResults []NotificationResult
 	successCount := 0
@@ -149,13 +149,12 @@ func (s *BroadcastService) processNotification(job NotificationJob) Notification
 	}
 }
 
-// SendNotification envia uma notificação sem ID específico
+// SendNotification without ID
 func (s *BroadcastService) SendNotification(ctx context.Context, message string, targets []NotificationTarget) error {
 	notificationID := fmt.Sprintf("notif_%d", time.Now().UnixNano())
 	return s.SendNotificationWithID(ctx, notificationID, message, targets)
 }
 
-// SendNotificationWithID envia uma notificação com ID específico
 func (s *BroadcastService) SendNotificationWithID(ctx context.Context, notificationID, message string, targets []NotificationTarget) error {
 	if len(targets) == 0 {
 		return nil
@@ -168,7 +167,6 @@ func (s *BroadcastService) SendNotificationWithID(ctx context.Context, notificat
 		Done:    make(chan NotificationJobResult, 1),
 	}
 
-	// Enviar job para o canal
 	select {
 	case s.notificationChan <- job:
 	case <-ctx.Done():
@@ -177,7 +175,6 @@ func (s *BroadcastService) SendNotificationWithID(ctx context.Context, notificat
 		return fmt.Errorf("timeout queuing notification job")
 	}
 
-	// Aguardar resultado
 	select {
 	case result := <-job.Done:
 		return result.Error
@@ -188,10 +185,8 @@ func (s *BroadcastService) SendNotificationWithID(ctx context.Context, notificat
 	}
 }
 
-// Métodos de envio específicos por tipo
-
+// Push with fallback to websocket
 func (s *BroadcastService) sendToUser(userID string, message string) error {
-	// Primeiro tenta push notification, depois websocket como fallback
 	if err := s.sendPushNotification(userID, message); err != nil {
 		return s.sendWebSocketMessage(userID, message)
 	}
@@ -227,14 +222,11 @@ func (s *BroadcastService) sendWebSocketMessage(userID string, message string) e
 	return nil
 }
 
-func (s *BroadcastService) sendEmail(email string, message string, metadata map[string]string) error {
+func (s *BroadcastService) sendEmail(email string, message string, metadata map[string]int) error {
 	// Simular envio de email
 	log.Printf("Sending email to %s: %s", email, message)
 
-	subject := "Notification"
-	if s, ok := metadata["subject"]; ok {
-		subject = s
-	}
+	subject := "Notification from Football"
 
 	log.Printf("Email subject: %s", subject)
 
@@ -257,20 +249,24 @@ func (s *BroadcastService) sendSMS(phone string, message string) error {
 	return nil
 }
 
-func (s *BroadcastService) sendWebhook(url string, message string, metadata map[string]string) error {
-	// Simular envio de webhook
+func (s *BroadcastService) sendWebhook(url string, message string, metadata map[string]int) error {
+	// INFO: in production the payload should be signed
 	log.Printf("Sending webhook to %s: %s", url, message)
 
-	// Em uma implementação real, você faria um HTTP POST
-	// payload := map[string]interface{}{
-	//     "message": message,
-	//     "metadata": metadata,
-	//     "timestamp": time.Now(),
-	// }
+	payload := map[string]interface{}{
+		"message":   message,
+		"metadata":  metadata,
+		"timestamp": time.Now(),
+	}
 
-	// Simular latência
-	time.Sleep(300 * time.Millisecond)
-	return nil
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatal("Failed to marshal payload:", err)
+	}
+
+	_, err = http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
+
+	return err
 }
 
 func (s *BroadcastService) Stop() {

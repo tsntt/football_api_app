@@ -56,9 +56,6 @@ func (c *FootballAPIClient) GetMatches(ctx context.Context, championshipID int, 
 
 	// Build query parameters
 	params := url.Values{}
-	if team != "" {
-		params.Add("team", team)
-	}
 	if stage != "" {
 		params.Add("stage", stage)
 	}
@@ -82,6 +79,17 @@ func (c *FootballAPIClient) GetMatches(ctx context.Context, championshipID int, 
 	var response dto.MatchesResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if team != "" {
+		var filteredResponse dto.MatchesResponse
+		for _, match := range response.Matches {
+			if match.HomeTeam.ShortName == team {
+				filteredResponse.Matches = append(filteredResponse.Matches, match)
+			}
+		}
+
+		return filteredResponse.Matches, nil
 	}
 
 	return response.Matches, nil

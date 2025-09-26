@@ -29,7 +29,7 @@ func (c *FanController) Subscribe(ctx context.Context, req *dto.FanRequest) (*dt
 
 	fan := &model.Fan{
 		UserID: req.UserID,
-		Team:   req.Team,
+		TeamID: req.TeamID,
 	}
 
 	if err := c.fanRepo.Create(ctx, fan); err != nil {
@@ -37,6 +37,6 @@ func (c *FanController) Subscribe(ctx context.Context, req *dto.FanRequest) (*dt
 	}
 
 	return &dto.APIResponse{
-		Message: fmt.Sprintf("Subscribed to %s", req.Team),
+		Message: fmt.Sprintf("Subscribed to %s", req.TeamName),
 	}, nil
 }

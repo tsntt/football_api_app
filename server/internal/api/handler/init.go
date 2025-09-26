@@ -32,6 +32,7 @@ func SetupRoutes(e *echo.Echo, handlers *Handlers, authMiddleware *middleware.Au
 	auth := e.Group("/auth")
 	auth.POST("/register", handlers.User.Register)
 	auth.POST("/login", handlers.User.Login)
+	auth.POST("/logout", handlers.User.Logout)
 
 	// Protected
 	protected := e.Group("")

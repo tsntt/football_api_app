@@ -41,5 +41,16 @@ func (h *UserHandler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
+	// INFO: would be safer to store token in cookie
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *UserHandler) Logout(c echo.Context) error {
+	// INFO: would be safer to remove token from cookie
+	response, err := h.controller.Logout(c.Request().Context())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+
 	return c.JSON(http.StatusOK, response)
 }

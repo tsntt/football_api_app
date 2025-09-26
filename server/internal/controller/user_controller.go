@@ -53,27 +53,30 @@ func (c *UserController) Register(ctx context.Context, req *dto.UserRequest) (*d
 }
 
 func (c *UserController) Login(ctx context.Context, req *dto.UserRequest) (*dto.LoginResponse, error) {
-	// Validate data
 	if err := c.validator.Struct(req); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
-	// Search user
 	user, err := c.userRepo.GetByName(ctx, req.Name)
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Check password
 	if !utils.CheckPasswordHash(req.Password, user.Password) {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Generate token
 	token, err := c.jwtService.GenerateToken(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
 	return &dto.LoginResponse{Token: token}, nil
+}
+
+func (c *UserController) Logout(ctx context.Context) (*dto.APIResponse, error) {
+	// TODO: remove token from cookie
+	return &dto.APIResponse{
+		Message: "Logged out successfully",
+	}, nil
 }

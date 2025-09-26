@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tsntt/footballapi/internal/controller"
@@ -25,7 +26,12 @@ func (h *AdminHandler) GetMatches(c echo.Context) error {
 }
 
 func (h *AdminHandler) BroadcastMatch(c echo.Context) error {
-	matchID := c.Param("match_id")
+	matchIDstr := c.Param("match_id")
+
+	matchID, err := strconv.Atoi(matchIDstr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid match ID")
+	}
 
 	response, err := h.controller.BroadcastMatch(c.Request().Context(), matchID)
 	if err != nil {

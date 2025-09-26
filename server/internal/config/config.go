@@ -41,8 +41,8 @@ func Load() *Config {
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnvInt("DB_PORT", 5432),
 			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASS", "postgres"),
-			Name:     getEnv("DB_NAME", "football_api"),
+			Password: getEnv("DB_PASS", "change_this_password"),
+			Name:     getEnv("DB_NAME", "football"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
@@ -54,7 +54,7 @@ func Load() *Config {
 			URL:   getEnv("FOOTBALL_API_URL", "https://api.football-data.org/v4"),
 		},
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8080"),
+			Port: getEnv("SERVER_PORT", "4000"),
 		},
 	}
 }

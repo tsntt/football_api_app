@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	data "github.com/tsntt/footballapi/data/postgres"
@@ -86,25 +88,27 @@ func main() {
 	})
 
 	// graceful shutdown
+	port := ":" + cfg.Server.Port
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	log.Printf("Starting server on port %s", cfg.Server.Port)
+
 	go func() {
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		<-quit
-
-		log.Println("Shutting down server...")
-
-		broadcastService.Stop()
-
-		if err := e.Shutdown(nil); err != nil {
-			log.Fatal("Server shutdown error:", err)
+		if err := e.Start(port); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("shutting down the server")
 		}
 	}()
 
-	// start server
-	port := ":" + cfg.Server.Port
-	log.Printf("Starting server on port %s", cfg.Server.Port)
+	<-ctx.Done()
 
-	if err := e.Start(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	broadcastService.Stop()
+
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
 	}
 }

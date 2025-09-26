@@ -16,6 +16,10 @@ test-server:
 clean-server:
 	cd server && rm -rf bin/
 
+# check db status
+db-status:
+	goose status
+
 # Database migration up (requires golang-migrate)
 migrate-up:
 	echo "Make sure you have goose installed and a postgres database running on localhost:5432"
