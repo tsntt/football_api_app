@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 func NewDB(host, user, password, dbname, sslmode string, port int) (*sqlx.DB, error) {

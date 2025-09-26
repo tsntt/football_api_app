@@ -17,19 +17,19 @@ func NewFanRepository(db *sqlx.DB) *FanRepository {
 }
 
 func (r *FanRepository) Create(ctx context.Context, fan *model.Fan) error {
-	query := `INSERT INTO fans (user_id, team) VALUES ($1, $2) RETURNING id`
-	err := r.db.QueryRowContext(ctx, query, fan.UserID, fan.Team).Scan(&fan.ID)
+	query := `INSERT INTO fans (user_id, team_id) VALUES ($1, $2) RETURNING id`
+	err := r.db.QueryRowContext(ctx, query, fan.UserID, fan.TeamID).Scan(&fan.ID)
 	if err != nil {
 		return fmt.Errorf("failed to create fan: %w", err)
 	}
 	return nil
 }
 
-func (r *FanRepository) GetByTeam(ctx context.Context, team string) ([]model.Fan, error) {
+func (r *FanRepository) GetByTeamID(ctx context.Context, teamID int) ([]model.Fan, error) {
 	fans := []model.Fan{}
-	query := `SELECT id, user_id, team FROM fans WHERE team = $1`
+	query := `SELECT id, user_id, team_id FROM fans WHERE team_id = $1`
 
-	err := r.db.SelectContext(ctx, &fans, query, team)
+	err := r.db.SelectContext(ctx, &fans, query, teamID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get fans by team: %w", err)
 	}
@@ -39,7 +39,7 @@ func (r *FanRepository) GetByTeam(ctx context.Context, team string) ([]model.Fan
 
 func (r *FanRepository) GetByUserID(ctx context.Context, userID int) ([]model.Fan, error) {
 	fans := []model.Fan{}
-	query := `SELECT id, user_id, team FROM fans WHERE user_id = $1`
+	query := `SELECT id, user_id, team_id FROM fans WHERE user_id = $1`
 
 	err := r.db.SelectContext(ctx, &fans, query, userID)
 	if err != nil {

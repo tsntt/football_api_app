@@ -36,11 +36,8 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 ################################################################################
 # Create a new stage for running the application using distroless.
 # This provides a minimal runtime environment with better security than Alpine.
-FROM gcr.io/distroless/static-debian12:nonroot AS final
-
-# Copy ca-certificates and timezone data from the build stage
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+# FROM gcr.io/distroless/static-debian12:nonroot AS final
+FROM alpine:3.20 AS final
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/server /bin/server

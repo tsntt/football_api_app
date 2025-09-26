@@ -32,6 +32,7 @@ type MatchesResponse struct {
 }
 
 type FanRequest struct {
-	UserID int    `json:"user_id" validate:"required"`
-	Team   string `json:"team" validate:"required"`
+	UserID   int    `json:"user_id" validate:"required"`
+	TeamID   int    `json:"team_id" validate:"required"`
+	TeamName string `json:"team_name" validate:"required"`
 }

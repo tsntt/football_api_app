@@ -5,10 +5,10 @@ import (
 )
 
 type NotificationTarget struct {
-	ID       string            `json:"id"`
-	Type     string            `json:"type"`
-	Address  string            `json:"address"`
-	Metadata map[string]string `json:"metadata"`
+	ID       string         `json:"id"`
+	Type     string         `json:"type"`
+	Address  string         `json:"address"`
+	Metadata map[string]int `json:"metadata"`
 }
 
 type IBroadcastService interface {
