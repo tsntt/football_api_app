@@ -1,117 +1,110 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
-	"time"
+	"syscall"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	data "github.com/tsntt/footballapi/data/postgres"
+	"github.com/tsntt/footballapi/internal/api/handler"
+	"github.com/tsntt/footballapi/internal/api/middleware"
 	"github.com/tsntt/footballapi/internal/config"
+	"github.com/tsntt/footballapi/internal/controller"
+	"github.com/tsntt/footballapi/pkg/broadcaster"
+	consumer "github.com/tsntt/footballapi/pkg/external_api_consumer"
+	"github.com/tsntt/footballapi/pkg/utils"
+
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-// CustomValidator para o Echo
-type CustomValidator struct {
-	validator *validator.Validate
-}
-
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
-		// Retorna 400 Bad Request
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	return nil
-}
-
 func main() {
-	// Carregar Variáveis de Ambiente
-	if err := os.Setenv("PORT", config.LoadConfig().Port); err != nil {
-		log.Fatal("Erro ao setar variável PORT:", err)
-	}
+	// load config
+	cfg := config.Load()
 
-	cfg := config.LoadConfig()
-
-	// 1. Conexão com o Banco de Dados (Postgres)
-	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
+	// Connect to database
+	db, err := data.NewDB(
+		cfg.Database.Host,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Name,
+		cfg.Database.SSLMode,
+		cfg.Database.Port,
+	)
 	if err != nil {
-		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	// 2. Inicializar Repositórios e Broadcaster
-	userRepo := repository.NewUserRepository(db)
-	fanRepo := repository.NewFanRepository(db)
+	// init repositories
+	userRepo := data.NewUserRepository(db)
+	fanRepo := data.NewFanRepository(db)
+	broadcastRepo := data.NewBroadcastRepository(db)
 
-	// Broadcaster (Sistema de mensagens com Channels)
-	bcast := broadcaster.NewBroadcaster()
-	go bcast.Start() // Inicia a goroutine do Broadcaster
+	// init services
+	jwtService := utils.NewJWTService(cfg.JWT.Secret, cfg.JWT.ExpiresHours)
+	footballAPI := consumer.NewFootballAPIClient(cfg.FootballAPI.URL, cfg.FootballAPI.Token)
+	broadcastService := broadcaster.NewBroadcastService(5)
 
-	// 3. Inicializar Handlers
-	authHandler := handler.NewAuthHandler(userRepo, cfg.JWTSecret)
-	championshipHandler := handler.NewChampionshipHandler(cfg.FootballAPIKey)
-	fanHandler := handler.NewFanHandler(fanRepo)
-	adminHandler := handler.NewAdminHandler(db, bcast) // db para listar partidas, bcast para o broadcast
+	// init controllers
+	userController := controller.NewUserController(userRepo, jwtService)
+	championshipController := controller.NewChampionshipController(footballAPI)
+	fanController := controller.NewFanController(fanRepo)
+	adminController := controller.NewAdminController(
+		footballAPI,
+		fanRepo,
+		broadcastRepo,
+		broadcastService,
+	)
 
-	// 4. Configurar Echo
+	// init handlers
+	handlers := handler.NewHandlers(
+		userController,
+		championshipController,
+		fanController,
+		adminController,
+	)
+
+	// init middlewares
+	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+
+	// Configure Echo
 	e := echo.New()
-	e.Validator = &CustomValidator{validator: validator.New()}
 
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	// Middlewares globais
+	e.Use(echomiddleware.Logger())
+	e.Use(echomiddleware.Recover())
+	e.Use(echomiddleware.CORS())
 
-	// 5. Configurar Middlewares e Rotas
+	// Configure rotas
+	handler.SetupRoutes(e, handlers, authMiddleware)
 
-	// Middleware de Autorização JWT
-	authMiddleware := auth.NewAuthMiddleware(cfg.JWTSecret)
+	// Health check
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{"status": "ok"})
+	})
 
-	// Rotas de Autenticação
-	authGroup := e.Group("/auth")
-	authGroup.POST("/register", authHandler.Register)
-	authGroup.POST("/login", authHandler.Login)
-
-	// Rotas Públicas de Campeonato
-	e.GET("/championship", championshipHandler.ListChampionships)
-	e.GET("/championship/:id/matches", championshipHandler.ListMatches)
-
-	// Rotas Protegidas (requerem JWT)
-	protectedGroup := e.Group("")
-	protectedGroup.Use(authMiddleware.ValidateJWT)
-
-	// Rota de Fã
-	protectedGroup.POST("/fans", fanHandler.SubscribeFan)
-
-	// Rotas de Administrador (você pode adicionar uma verificação de role aqui)
-	adminGroup := protectedGroup.Group("/admin")
-	adminGroup.GET("", adminHandler.ListAdminMatches)                            // Listar partidas com estados
-	adminGroup.POST("/broadcast/:match_id", adminHandler.BroadcastMatchUpdate)   // Disparar Broadcast
-	adminGroup.POST("/broadcast/cancel/:match_id", adminHandler.CancelBroadcast) // Cancelar Broadcast
-
-	s := &http.Server{
-		Addr:         ":" + cfg.Port,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	log.Printf("Servidor rodando na porta %s", cfg.Port)
+	// graceful shutdown
 	go func() {
-		if err := e.StartServer(s); err != nil && err != http.ErrServerClosed {
-			e.Logger.Fatal("shutting down the server")
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+
+		log.Println("Shutting down server...")
+
+		broadcastService.Stop()
+
+		if err := e.Shutdown(nil); err != nil {
+			log.Fatal("Server shutdown error:", err)
 		}
 	}()
 
-	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+	// start server
+	port := ":" + cfg.Server.Port
+	log.Printf("Starting server on port %s", cfg.Server.Port)
+
+	if err := e.Start(port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

@@ -1,4 +1,4 @@
-package externalapi
+package consumer
 
 import (
 	"context"
