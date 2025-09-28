@@ -1,6 +1,19 @@
 # Football Web App
 
+## Descrição
+
+bla bla bla
+
 ## MENU
+
+- [Getting Started](#getting-started)
+- [Setup](#setup)
+- [Server](#server)
+- [Client](#client)
+
+---
+Veja a [Documentação da API](docs/api/guia.md) para mais detalhes.
+---
 
 ## Getting Started
 
@@ -37,8 +50,9 @@ sudo apt-get install -y nodejs
 brew install node
 ```
 **Windows**
-https://nodejs.org/en/download/
-
+```bash
+scoop install main/nodejs
+```
 ### Install pnpm
 **Linux**
 ```bash
@@ -49,8 +63,9 @@ curl -fsSL https://get.pnpm.io/install.sh | sh -
 brew install pnpm
 ```
 **Windows**
-https://pnpm.io/installation
-
+```bash
+scoop install main/pnpm
+```
 ### Install Go
 **Linux**
 ```bash
@@ -63,8 +78,9 @@ rm go1.25.1.linux-amd64.tar.gz
 brew install go
 ```
 **Windows**
-https://go.dev/dl/go1.25.1.windows-amd64.msi
-
+```bash
+scoop install main/go
+```
 ### Install Goose
 ```bash
 go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -74,7 +90,38 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 go install github.com/cosmtrek/air@latest
 ```
 
+## Run both
+```bash
+docker compose up
+
+goose status // check if database is connected
+goose up
+
+curl http://localhost:4000/health
+
+// go to http://localhost:3000
+
+```
+
 ## Server
+```bash
+cd server
+
+docker compose up
+
+goose status // check if database is connected
+goose up
+
+curl http://localhost:4000/health
+
+```
 
 ## Client
+```bash
+cd client
+
+pnpm install
+
+pnpm run dev
+```
 
