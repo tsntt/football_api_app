@@ -3,19 +3,19 @@ package controller
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/websocket"
 	"github.com/tsntt/footballapi/internal/dto"
 	"github.com/tsntt/footballapi/internal/model"
-	"github.com/tsntt/footballapi/pkg/broadcaster"
+	"github.com/tsntt/footballapi/pkg/broadcast"
 )
 
 type AdminController struct {
 	externalAPI      model.IChampionshipAPI
 	fanRepo          model.IFanRepository
 	broadcastRepo    model.IBroadcastRepository
-	broadcastService broadcaster.IBroadcastService
+	broadcastService *broadcast.BroadcastService
 	validator        *validator.Validate
 }
 
@@ -23,7 +23,7 @@ func NewAdminController(
 	externalAPI model.IChampionshipAPI,
 	fanRepo model.IFanRepository,
 	broadcastRepo model.IBroadcastRepository,
-	broadcastService broadcaster.IBroadcastService,
+	broadcastService *broadcast.BroadcastService,
 ) *AdminController {
 	return &AdminController{
 		externalAPI:      externalAPI,
@@ -59,6 +59,7 @@ func (c *AdminController) GetMatches(ctx context.Context) ([]model.Match, error)
 		"CANCELLED": true,
 	}
 
+	// TODO: filter also by fan in db
 	var filteredMatches []model.Match
 	for _, match := range allMatches {
 		if validStatuses[match.Status] {
@@ -100,18 +101,12 @@ func (c *AdminController) BroadcastMatch(ctx context.Context, matchID int) (*dto
 		}, nil
 	}
 
-	// []Fan to []NotificationTarget
-	var targets []broadcaster.NotificationTarget
-	for i, fan := range allFans {
-		targets = append(targets, broadcaster.NotificationTarget{
-			ID:      fmt.Sprintf("fan_%d", i),
-			Type:    "user",
-			Address: strconv.Itoa(fan.UserID),
-			Metadata: map[string]int{
-				"team_id":  fan.TeamID,
-				"fan_id":   fan.ID,
-				"match_id": matchID,
-			},
+	for _, fan := range allFans {
+		c.broadcastService.AddSubscription(broadcast.Subscription{
+			UserID:           fan.ID,
+			ChannelID:        fan.TeamID,
+			NotificationType: broadcast.NotificationType(fan.NotificationType),
+			Address:          fan.Address,
 		})
 	}
 
@@ -123,16 +118,17 @@ func (c *AdminController) BroadcastMatch(ctx context.Context, matchID int) (*dto
 
 	notificationID := fmt.Sprintf("match_%d", matchID)
 
-	go func() {
-		if err := c.broadcastService.SendNotificationWithID(context.Background(), notificationID, message, targets); err != nil {
-			fmt.Printf("Broadcast error: %v\n", err)
-		}
-	}()
+	msg := broadcast.Message{
+		Title:   "Football APP",
+		Content: message,
+	}
+
+	go c.broadcastService.BroadCastToChannel(context.Background(), 5, match.HomeTeam.ID, msg)
 
 	broadcast := &model.BroadcastMessage{
-		MatchID: matchID,
-		Message: message,
-		Status:  "sent",
+		MatchID:            matchID,
+		MessageContentHash: broadcast.GenerateContentHash(msg),
+		Status:             "sent",
 	}
 
 	if err := c.broadcastRepo.Create(ctx, broadcast); err != nil {
@@ -140,12 +136,20 @@ func (c *AdminController) BroadcastMatch(ctx context.Context, matchID int) (*dto
 	}
 
 	return &dto.APIResponse{
-		Message: fmt.Sprintf("Broadcast sent to %d fans", len(allFans)),
+		Message: fmt.Sprintf("Broadcast started! notifying %d %s fans and %d %s fans.", len(homeFans), match.HomeTeam.Name, len(awayFans), match.AwayTeam.Name),
 		Data: map[string]interface{}{
 			"match_id":        matchID,
 			"notification_id": notificationID,
-			"targets_count":   len(targets),
+			"targets_count":   len(allFans),
 			"message":         message,
 		},
 	}, nil
+}
+
+func (c *AdminController) RegisterWS(conn *websocket.Conn) {
+	c.broadcastService.RegisterAdmConn(conn)
+}
+
+func (c *AdminController) UnregisterWS(conn *websocket.Conn) {
+	c.broadcastService.UnregisterAdmConn(conn)
 }

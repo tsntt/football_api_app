@@ -6,11 +6,11 @@ import (
 )
 
 type BroadcastMessage struct {
-	ID      int       `json:"id" db:"id"`
-	MatchID int       `json:"match_id" db:"match_id"`
-	Message string    `json:"message" db:"message"`
-	SentAt  time.Time `json:"sent_at" db:"sent_at"`
-	Status  string    `json:"status" db:"status"`
+	ID                 int       `json:"id" db:"id"`
+	MatchID            int       `json:"match_id" db:"match_id"`
+	MessageContentHash string    `json:"message_content_hash" db:"message_content_hash"`
+	Status             string    `json:"status" db:"status"`
+	CreatedAt          time.Time `json:"created_at" db:"created_at"`
 }
 
 type IBroadcastRepository interface {

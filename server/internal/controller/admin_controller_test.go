@@ -7,7 +7,7 @@ import (
 
 	"github.com/tsntt/footballapi/internal/controller"
 	"github.com/tsntt/footballapi/internal/model"
-	"github.com/tsntt/footballapi/pkg/broadcaster"
+	"github.com/tsntt/footballapi/pkg/broadcast"
 )
 
 func TestAdminController_GetMatches(t *testing.T) {
@@ -49,10 +49,10 @@ func TestAdminController_BroadcastMatch(t *testing.T) {
 	mockFanRepo := &mockFanRepository{
 		getByTeamID: func(ctx context.Context, teamID int) ([]model.Fan, error) {
 			if teamID == 1 {
-				return []model.Fan{{ID: 1, UserID: 101, TeamID: 1}}, nil
+				return []model.Fan{{ID: 1, TeamID: 1}}, nil
 			}
 			if teamID == 2 {
-				return []model.Fan{{ID: 2, UserID: 102, TeamID: 2}}, nil
+				return []model.Fan{{ID: 2, TeamID: 2}}, nil
 			}
 			return nil, nil
 		},
@@ -65,21 +65,18 @@ func TestAdminController_BroadcastMatch(t *testing.T) {
 			return nil
 		},
 	}
-	mockBroadcastSvc := &mockBroadcastService{
-		sendNotificationWithID: func(ctx context.Context, notificationID, message string, targets []broadcaster.NotificationTarget) error {
-			return nil
-		},
-	}
 
-	adminController := controller.NewAdminController(mockAPI, mockFanRepo, mockBroadcastRepo, mockBroadcastSvc)
+	broadcastService := broadcast.NewBroadcastService()
+	adminController := controller.NewAdminController(mockAPI, mockFanRepo, mockBroadcastRepo, broadcastService)
 	response, err := adminController.BroadcastMatch(context.Background(), 123)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if response.Message != "Broadcast sent to 2 fans" {
-		t.Errorf("unexpected response message: %s", response.Message)
+	expectedMessage := "Broadcast started! notifying 1 Home fans and 1 Away fans."
+	if response.Message != expectedMessage {
+		t.Errorf("unexpected response message: got %s, want %s", response.Message, expectedMessage)
 	}
 }
 
@@ -132,4 +129,16 @@ func TestAdminController_BroadcastMatch_NoFans(t *testing.T) {
 	if response.Message != "No fans found for this match" {
 		t.Errorf("unexpected response message: %s", response.Message)
 	}
+}
+
+func TestAdminController_RegisterWS(t *testing.T) {
+	broadcastService := broadcast.NewBroadcastService()
+	adminController := controller.NewAdminController(nil, nil, nil, broadcastService)
+	adminController.RegisterWS(nil)
+}
+
+func TestAdminController_UnregisterWS(t *testing.T) {
+	broadcastService := broadcast.NewBroadcastService()
+	adminController := controller.NewAdminController(nil, nil, nil, broadcastService)
+	adminController.UnregisterWS(nil)
 }

@@ -1,4 +1,4 @@
-package services
+package email
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mailgun/mailgun-go/v5"
+	"github.com/tsntt/footballapi/pkg/broadcast"
 )
 
 type MailgunService struct {
@@ -26,7 +27,11 @@ func NewMailgunService(domain, apiKey, from string) *MailgunService {
 	}
 }
 
-func (m *MailgunService) SendEmail(to, subject, message string, metadata map[string]string) error {
+func (m *MailgunService) Send(ctx context.Context, subscription broadcast.Subscription, message broadcast.Message) error {
+	return m.sendEmail(subscription.Address, message.Title, message.Content, map[string]string{})
+}
+
+func (m *MailgunService) sendEmail(to, subject, message string, metadata map[string]string) error {
 	t, err := template.ParseFiles("internals/libs/email/templates/code.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse email template: %w", err)
