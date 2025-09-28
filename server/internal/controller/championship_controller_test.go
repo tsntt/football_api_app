@@ -9,6 +9,34 @@ import (
 	"github.com/tsntt/footballapi/internal/model"
 )
 
+func BenchmarkChampionshipController_GetChampionships(b *testing.B) {
+	mockAPI := &mockChampionshipAPI{
+		getChampionships: func(ctx context.Context) ([]model.Championship, error) {
+			return []model.Championship{{ID: 1, Name: "Test Championship"}}, nil
+		},
+	}
+
+	championshipController := controller.NewChampionshipController(mockAPI)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = championshipController.GetChampionships(context.Background())
+	}
+}
+
+func BenchmarkChampionshipController_GetMatches(b *testing.B) {
+	mockAPI := &mockChampionshipAPI{
+		getMatches: func(ctx context.Context, championshipID int, dateFrom, dateTo string) ([]model.Match, error) {
+			return []model.Match{{ID: 1, Status: "SCHEDULED"}}, nil
+		},
+	}
+
+	championshipController := controller.NewChampionshipController(mockAPI)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = championshipController.GetMatches(context.Background(), "1", "", "")
+	}
+}
+
 func TestChampionshipController_GetChampionships(t *testing.T) {
 	mockAPI := &mockChampionshipAPI{
 		getChampionships: func(ctx context.Context) ([]model.Championship, error) {

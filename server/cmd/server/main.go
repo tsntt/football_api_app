@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -100,7 +101,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	log.Printf("Starting server on port %s", cfg.Server.Port)
+	slog.Info("Starting server on port", slog.String("port", cfg.Server.Port))
 
 	go func() {
 		if err := e.Start(port); err != nil && err != http.ErrServerClosed {

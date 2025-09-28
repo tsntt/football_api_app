@@ -2,7 +2,7 @@
 
 ## Descrição
 
-bla bla bla
+I choose to unity both projects into one, so here you can register, login, logout, get championships, get and filter matches, broadcast matches and more.
 
 ## MENU
 
@@ -10,20 +10,22 @@ bla bla bla
 - [Setup](#setup)
 - [Server](#server)
 - [Client](#client)
+- [Choices](#choices)
 
 ---
-Veja a [Documentação da API](docs/api/guia.md) para mais detalhes.
+Look at [API Documentation](docs/api/guia.md) for more details.
+For API Only you may use Postman collection [here](https://web.postman.co/54934cc3-4386-4d24-ad9c-76441e3e236d).
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Docker Desktop (https://www.docker.com/products/docker-desktop/)
-- Goose (https://github.com/pressly/goose)
-- Air (https://github.com/cosmtrek/air)
-- pnpm (https://pnpm.io/)
-- Go 1.25.1
-- Node 23.10.0
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Goose](https://github.com/pressly/goose)
+- [Air](https://github.com/cosmtrek/air)
+- [pnpm](https://pnpm.io/)
+- [Go](https://go.dev/dl/)
+- [Node](https://nodejs.org/en/download/)
 
 ## Setup
 ### Install Docker Desktop
@@ -93,13 +95,16 @@ go install github.com/cosmtrek/air@latest
 ## Run both
 ```bash
 docker compose up
+# or 
+docker compose up -d
 
-goose status // check if database is connected
-goose up
-
-curl http://localhost:4000/health
+goose status # check if database is connected
+goose up # make migrations
 
 // go to http://localhost:3000
+
+# For admin = username: admin password: admin123
+# For regular user just register one
 
 ```
 
@@ -113,6 +118,12 @@ goose status // check if database is connected
 goose up
 
 curl http://localhost:4000/health
+
+# Alternativily you can run postgres and use air to run a hot-reload server
+
+air init
+
+air
 
 ```
 

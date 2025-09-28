@@ -25,13 +25,17 @@ export function MatchesList({ matches, isLoading = false }: MatchesListProps) {
 
     console.log("Matches:", matches)
 
-    matches.forEach((match) => {
-      const stage = match.stage
-      if (!groups[stage]) {
-        groups[stage] = []
-      }
-      groups[stage].push(match)
-    })
+    if (Array.isArray(matches)) {
+      matches.forEach((match) => {
+        if (match) {
+          const stage = match.stage
+          if (!groups[stage]) {
+            groups[stage] = []
+          }
+          groups[stage].push(match)
+        }
+      })
+    }
 
     // Sort matches within each group by date
     Object.keys(groups).forEach((stage) => {
@@ -58,7 +62,7 @@ export function MatchesList({ matches, isLoading = false }: MatchesListProps) {
     )
   }
 
-  if (matches.length === 0) {
+  if (!matches || matches.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">⚽</div>

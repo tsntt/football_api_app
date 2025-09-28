@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -18,6 +19,7 @@ func NewChampionshipHandler(controller *controller.ChampionshipController) *Cham
 func (h *ChampionshipHandler) GetChampionships(c echo.Context) error {
 	championships, err := h.controller.GetChampionships(c.Request().Context())
 	if err != nil {
+		slog.Error("Failed to get championships", slog.String("err", err.Error()))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -31,6 +33,7 @@ func (h *ChampionshipHandler) GetMatches(c echo.Context) error {
 
 	matches, err := h.controller.GetMatches(c.Request().Context(), championshipID, team, stage)
 	if err != nil {
+		slog.Error("Failed to get matches", slog.String("err", err.Error()))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

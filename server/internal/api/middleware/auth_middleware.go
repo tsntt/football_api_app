@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -25,18 +26,21 @@ func (m *AuthMiddleware) JWTAuth() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
+				slog.Error("Authorization header required")
 				return echo.NewHTTPError(http.StatusUnauthorized, "Authorization header required")
 			}
 
 			// Check token format "Bearer <token>"
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 || parts[0] != "Bearer" {
+				slog.Error("Invalid authorization header format")
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid authorization header format")
 			}
 
 			tokenString := parts[1]
 			claims, err := m.jwtService.ValidateToken(tokenString)
 			if err != nil {
+				slog.Error("Invalid token", slog.String("err", err.Error()))
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token: "+err.Error())
 			}
 
@@ -53,10 +57,12 @@ func (m *AuthMiddleware) AdminAuth() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			user, ok := c.Get("user").(*dto.JWTClaims)
 			if !ok {
+				slog.Error("User not found in context")
 				return echo.NewHTTPError(http.StatusUnauthorized, "User not found in context")
 			}
 
 			if user.Role != "admin" {
+				slog.Error("Admin access required")
 				return echo.NewHTTPError(http.StatusForbidden, "Admin access required")
 			}
 

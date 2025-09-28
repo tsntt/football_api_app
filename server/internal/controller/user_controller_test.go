@@ -11,6 +11,44 @@ import (
 	"github.com/tsntt/footballapi/pkg/utils"
 )
 
+func BenchmarkUserController_Register(b *testing.B) {
+	mockUserRepo := &mockUserRepository{
+		create: func(ctx context.Context, user *model.User) error {
+			return nil
+		},
+	}
+
+	userController := controller.NewUserController(mockUserRepo, nil)
+	req := &dto.UserRequest{
+		Name:     "testuser",
+		Password: "password",
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, _ = userController.Register(context.Background(), req)
+	}
+}
+
+func BenchmarkUserController_Login(b *testing.B) {
+	hashedPassword, _ := utils.HashPassword("password")
+	mockUserRepo := &mockUserRepository{
+		getByName: func(ctx context.Context, name string) (*model.User, error) {
+			return &model.User{ID: 1, Name: "testuser", Password: hashedPassword, Role: "default"}, nil
+		},
+	}
+
+	jms := utils.NewJWTService("secret", 24)
+	userController := controller.NewUserController(mockUserRepo, jms)
+	req := &dto.UserRequest{
+		Name:     "testuser",
+		Password: "password",
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, _ = userController.Login(context.Background(), req)
+	}
+}
+
 func TestUserController_Register(t *testing.T) {
 	mockUserRepo := &mockUserRepository{
 		create: func(ctx context.Context, user *model.User) error {

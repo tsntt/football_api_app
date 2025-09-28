@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
   const { data: filteredMatches = [], isLoading: isLoadingFilteredMatches } = useMatches(
     selectedChampionship,
-    selectedTeam || undefined, // Pass team ID to matches hook
+    selectedTeam || undefined, 
     selectedStage === "all" ? undefined : selectedStage || undefined,
   )
 
@@ -83,7 +83,6 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">
                 Escolha um campeonato acima para visualizar as partidas disponíveis.
               </p>
-              <p className="text-xs text-blue-600 mt-2">Modo de teste ativo - dados simulados disponíveis</p>
             </div>
           )}
         </div>

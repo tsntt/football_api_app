@@ -12,6 +12,7 @@ type Fan struct {
 
 type IFanRepository interface {
 	Create(ctx context.Context, fan *Fan) error
+	GetAll(ctx context.Context) ([]Fan, error)
 	GetByTeamID(ctx context.Context, teamID int) ([]Fan, error)
 	GetByUserID(ctx context.Context, userID int) ([]Fan, error)
 	DeleteByUserIDAndTeam(ctx context.Context, userID int, team string) error

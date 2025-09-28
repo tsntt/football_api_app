@@ -6,9 +6,9 @@ export function useAdminMatches() {
   return useQuery({
     queryKey: queryKeys.admin.matches(),
     queryFn: () => apiClient.getAdminMatches(),
-    staleTime: 1 * 60 * 1000, // 1 minute - admin data needs to be fresh
-    gcTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds for real-time updates
-    refetchIntervalInBackground: true, // Continue refetching when tab is not active
+    staleTime: 5 * 60 * 1000, // 5 minute - admin data needs to be fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchInterval: 10 * 60 *1000, // Refetch every 10 minutes updates
+    refetchIntervalInBackground: false, // Continue refetching when tab is not active
   })
 }

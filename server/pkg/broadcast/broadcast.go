@@ -3,6 +3,7 @@ package broadcast
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -60,7 +61,7 @@ func (s *BroadcastService) UnregisterAdmConn(conn *websocket.Conn) {
 func (s *BroadcastService) BroadCastToChannel(ctx context.Context, nWorkers, channelID int, msg Message) {
 	subs, ok := s.subscriptions[channelID]
 	if !ok || len(subs) == 0 {
-		fmt.Printf("No subscriptions found for channel %d", channelID)
+		slog.Info("No subscriptions found for channel", slog.Int("channel_id", channelID))
 		return
 	}
 
@@ -82,7 +83,7 @@ func (s *BroadcastService) BroadCastToChannel(ctx context.Context, nWorkers, cha
 
 func (s *BroadcastService) worker(id int, jobs <-chan BroadcastJob, results chan<- BroadcastResult) {
 	for job := range jobs {
-		fmt.Printf("Worker %d processing jobs for channel %d\n via %s\n", id, job.Subscription.ChannelID, job.Subscription.NotificationType)
+		slog.Info("Worker", slog.Int("id", id), "processing job", slog.Int("channel_id", job.Subscription.ChannelID))
 
 		broadcaster, ok := s.notifiers[job.Subscription.NotificationType]
 		if !ok {
@@ -131,7 +132,7 @@ func (s *BroadcastService) aggregateResults(channelID int, totalJobs int, result
 
 	status.IsCompleted = true
 	s.broadcastStatusToAdmins(status)
-	fmt.Printf("Broadcast completed for channel %d\n with %d sent, %d failed\n", channelID, status.SentCount, status.FailedCount)
+	slog.Info(fmt.Sprintf("Broadcast completed for channel %d\n with %d sent, %d failed\n", channelID, status.SentCount, status.FailedCount))
 }
 
 func (s *BroadcastService) broadcastStatusToAdmins(status BroadcastStatus) {
@@ -140,7 +141,7 @@ func (s *BroadcastService) broadcastStatusToAdmins(status BroadcastStatus) {
 
 	for conn := range s.admConn {
 		if err := conn.WriteJSON(status); err != nil {
-			fmt.Printf("Failed to send broadcast status to admin: %v\n", err)
+			slog.Warn("Failed to send broadcast status to admin", slog.String("err", err.Error()))
 			conn.Close()
 			go s.UnregisterAdmConn(conn)
 		}

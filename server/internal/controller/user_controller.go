@@ -76,7 +76,6 @@ func (c *UserController) Login(ctx context.Context, req *dto.UserRequest) (*dto.
 }
 
 func (c *UserController) Logout(ctx context.Context) (*dto.APIResponse, error) {
-	// TODO: remove token from cookie
 	return &dto.APIResponse{
 		Message: "Logged out successfully",
 	}, nil

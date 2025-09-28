@@ -1,6 +1,7 @@
 import type { Championship, Match, AuthResponse, BroadcastResponse } from "./types"
+import { toast } from "sonner"
 
-const API_BASE_URL = process.env.SERVER_URL || "http://localhost:4000"
+const API_BASE_URL = process.env.SERVER_URL || "http://localhost:4000/api/v1"
 
 class ApiClient {
   private getAuthHeaders() {
@@ -13,9 +14,9 @@ class ApiClient {
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
-        ...this.getAuthHeaders(),
-        ...options.headers,
-      },
+        ...(this.getAuthHeaders() as Record<string, string>),
+        ...(options.headers as Record<string, string>),
+      } as Record<string, string>,
       ...options,
     }
 
@@ -25,10 +26,15 @@ class ApiClient {
 
     if (!response.ok) {
       const errorMessage = `API Error: ${response.status} ${response.statusText}`
-      const error = new Error(errorMessage)
+      const error = new Error(errorMessage);
 
         // Add status code to error for retry logic
-        ; (error as any).status = response.status
+        (error as any).status = response.status
+
+        if (endpoint.endsWith('/fans') && response.status === 429) {
+          const resp = await response.json()
+          toast.warning(resp.message)
+        }
 
       throw error
     }
@@ -38,28 +44,28 @@ class ApiClient {
 
   // Auth endpoints
   async register(name: string, password: string) {
-    return this.request<{ message: string }>("/api/v1/auth/register", {
+    return this.request<{ message: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, password }),
     })
   }
 
   async login(name: string, password: string) {
-    return this.request<AuthResponse>("/api/v1/auth/login", {
+    return this.request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ name, password }),
     })
   }
 
   async logout() {
-    return this.request<{ message: string }>("/api/v1/auth/logout", {
+    return this.request<{ message: string }>("/auth/logout", {
       method: "POST",
     })
   }
 
   // Championship endpoints
   async getChampionships() {
-    return this.request<Championship[]>("/api/v1/championship")
+    return this.request<Championship[]>("/championship")
   }
 
   async getMatches(championshipId: number, team?: string, stage?: string) {
@@ -68,16 +74,22 @@ class ApiClient {
     if (stage) params.append("stage", stage)
 
     const query = params.toString() ? `?${params.toString()}` : ""
-    return this.request<Match[]>(`/api/v1/championship/${championshipId}/matches${query}`)
+    return this.request<Match[]>(`/championship/${championshipId}/matches${query}`)
   }
 
+    async subscribeToTeam(teamId: number, teamName: string) {
+      return this.request<{ message: string }>("/fans", {
+        method: "POST",
+        body: JSON.stringify({ team_id: teamId, team_name: teamName }),
+      })
+    }
   // Admin endpoints
   async getAdminMatches() {
-    return this.request<Match[]>("/api/v1/admin/")
+    return this.request<Match[]>("/admin/")
   }
 
   async broadcastMatch(matchId: number) {
-    return this.request<BroadcastResponse>(`/api/v1/admin/broadcast/${matchId}`, {
+    return this.request<BroadcastResponse>(`/admin/broadcast/${matchId}`, {
       method: "POST",
     })
   }

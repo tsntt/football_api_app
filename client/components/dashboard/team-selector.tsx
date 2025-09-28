@@ -6,35 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import type { Match, Team } from "@/lib/types"
-import { se } from "date-fns/locale"
+import type { Team } from "@/lib/types"
 
 interface TeamSelectorProps {
-  matches: Match[]
+  teams: Team[]
   value: string
   onValueChange: (value: string) => void
   disabled?: boolean
 }
 
-export function TeamSelector({ matches, value, onValueChange, disabled = false }: TeamSelectorProps) {
+export function TeamSelector({ teams, value, onValueChange, disabled = false }: TeamSelectorProps) {
   const [open, setOpen] = useState(false)
-
-  const teams = useMemo(() => {
-    if (!matches || !Array.isArray(matches)) {
-      return []
-    }
-
-    const teamMap = new Map<number, Team>()
-
-    matches.forEach((match) => {
-      if (match?.homeTeam?.id && match?.awayTeam?.id) {
-        teamMap.set(match.homeTeam.id, match.homeTeam)
-        teamMap.set(match.awayTeam.id, match.awayTeam)
-      }
-    })
-
-    return Array.from(teamMap.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [matches])
 
   const selectedTeam = teams.find((t) => t.shortName === value)
 

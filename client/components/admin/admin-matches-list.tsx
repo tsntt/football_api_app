@@ -58,13 +58,13 @@ export function AdminMatchesList({ matches, isLoading = false }: AdminMatchesLis
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-screen-lg mx-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Partidas com Inscritos ({matches.length})</h2>
         <div className="text-sm text-muted-foreground">Atualizado automaticamente a cada 30 segundos</div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {sortedMatches.map((match) => (
           <AdminMatchCard key={match.id} match={match} />
         ))}

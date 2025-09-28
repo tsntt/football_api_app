@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -27,30 +27,40 @@ func NewAdminHandler(controller *controller.AdminController) *AdminHandler {
 }
 
 func (h *AdminHandler) GetMatches(c echo.Context) error {
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	defer ws.Close()
-
-	defer h.controller.UnregisterWS(ws)
-
-	fmt.Println("New admin connected")
-
-	for {
-		if _, _, err := ws.NextReader(); err != nil {
-			fmt.Println("Admin connection lost!")
-			break
-		}
-	}
-
 	matches, err := h.controller.GetMatches(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// TODO: maybe use a websocket client instead
 	return c.JSON(http.StatusOK, matches)
+}
+
+func (h *AdminHandler) WsHandler(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		slog.Error("Failed to upgrade to websocket", slog.String("err", err.Error()))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	defer ws.Close()
+
+	h.controller.RegisterWS(ws)
+	defer h.controller.UnregisterWS(ws)
+
+	for {
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			slog.Info("read:", slog.String("err", err.Error()))
+			break
+		}
+		slog.Info("recv:", slog.String("msg", string(msg)))
+
+		if _, _, err := ws.NextReader(); err != nil {
+			slog.Info("Admin connection lost!")
+			break
+		}
+	}
+
+	return nil
 }
 
 func (h *AdminHandler) BroadcastMatch(c echo.Context) error {
@@ -58,11 +68,13 @@ func (h *AdminHandler) BroadcastMatch(c echo.Context) error {
 
 	matchID, err := strconv.Atoi(matchIDstr)
 	if err != nil {
+		slog.Error("Invalid match ID", slog.String("err", err.Error()))
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid match ID")
 	}
 
 	response, err := h.controller.BroadcastMatch(c.Request().Context(), matchID)
 	if err != nil {
+		slog.Error("Failed to broadcast match", slog.String("err", err.Error()))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

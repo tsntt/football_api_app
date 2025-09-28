@@ -22,7 +22,7 @@ func (r *BroadcastRepository) Create(ctx context.Context, broadcast *model.Broad
 	query := `
 		INSERT INTO broadcasted_messages (match_id, message_content_hash, status) 
 		VALUES ($1, $2, $3) 
-		RETURNING id, sent_at`
+		RETURNING id, created_at`
 
 	err := r.db.QueryRowContext(ctx, query, broadcast.MatchID, broadcast.MessageContentHash, broadcast.Status).
 		Scan(&broadcast.ID, &broadcast.CreatedAt)

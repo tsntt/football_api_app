@@ -13,7 +13,7 @@ import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import type { WebSocketUpdate } from "@/lib/types"
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000/api/v1/admin/"
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000/api/v1/ws"
 
 export default function NotificacoesPage() {
   const { isAuthenticated, user } = useAuthStore()

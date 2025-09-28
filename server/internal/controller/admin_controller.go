@@ -59,11 +59,25 @@ func (c *AdminController) GetMatches(ctx context.Context) ([]model.Match, error)
 		"CANCELLED": true,
 	}
 
-	// TODO: filter also by fan in db
 	var filteredMatches []model.Match
+
+	fans, err := c.fanRepo.GetAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fans: %w", err)
+	}
+
+	if len(fans) == 0 {
+		return nil, fmt.Errorf("no fans found")
+	}
+
 	for _, match := range allMatches {
 		if validStatuses[match.Status] {
-			filteredMatches = append(filteredMatches, match)
+			for _, fan := range fans {
+				if fan.TeamID == match.HomeTeam.ID || fan.TeamID == match.AwayTeam.ID {
+					filteredMatches = append(filteredMatches, match)
+					break
+				}
+			}
 		}
 	}
 

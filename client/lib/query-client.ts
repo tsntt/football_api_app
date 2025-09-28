@@ -46,7 +46,7 @@ export const queryKeys = {
 
   // Matches
   matches: (championshipId: number, team?: string, stage?: string) =>
-    ["matches", championshipId, team, stage].filter(Boolean) as const,
+    (["matches", championshipId, team, stage].filter(Boolean) as (string | number)[]),
 
   // Admin
   admin: {

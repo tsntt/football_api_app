@@ -25,6 +25,18 @@ func (r *FanRepository) Create(ctx context.Context, fan *model.Fan) error {
 	return nil
 }
 
+func (r *FanRepository) GetAll(ctx context.Context) ([]model.Fan, error) {
+	fans := []model.Fan{}
+	query := `SELECT id, user_id, team_id FROM fans`
+
+	err := r.db.SelectContext(ctx, &fans, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fans: %w", err)
+	}
+
+	return fans, nil
+}
+
 func (r *FanRepository) GetByTeamID(ctx context.Context, teamID int) ([]model.Fan, error) {
 	fans := []model.Fan{}
 	query := `SELECT id, user_id, team_id FROM fans WHERE team_id = $1`

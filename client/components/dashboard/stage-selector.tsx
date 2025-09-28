@@ -1,11 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Match } from "@/lib/types"
 
 interface StageSelectorProps {
-  matches: Match[]
+  stages: string[]
   value: string
   onValueChange: (value: string) => void
   disabled?: boolean
@@ -21,18 +19,7 @@ const stageLabels: Record<string, string> = {
   THIRD_PLACE: "Terceiro Lugar",
 }
 
-export function StageSelector({ matches, value, onValueChange, disabled = false }: StageSelectorProps) {
-  const stages = useMemo(() => {
-    if (!matches || !Array.isArray(matches)) {
-      return []
-    }
-
-    const stageSet = new Set<string>()
-    matches.forEach((match) => {
-      stageSet.add(match.stage)
-    })
-    return Array.from(stageSet).sort()
-  }, [matches])
+export function StageSelector({ stages, value, onValueChange, disabled = false }: StageSelectorProps) {
 
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>

@@ -9,7 +9,7 @@ import (
 // Mocks
 type mockChampionshipAPI struct {
 	getChampionships func(ctx context.Context) ([]model.Championship, error)
-	getMatches       func(ctx context.Context, championshipID int, dateFrom, dateTo string) ([]model.Match, error)
+	getMatches       func(ctx context.Context, championshipID int, team, stage string) ([]model.Match, error)
 	getMatch         func(ctx context.Context, matchID int) (*model.Match, error)
 }
 
@@ -17,8 +17,8 @@ func (m *mockChampionshipAPI) GetChampionships(ctx context.Context) ([]model.Cha
 	return m.getChampionships(ctx)
 }
 
-func (m *mockChampionshipAPI) GetMatches(ctx context.Context, championshipID int, dateFrom, dateTo string) ([]model.Match, error) {
-	return m.getMatches(ctx, championshipID, dateFrom, dateTo)
+func (m *mockChampionshipAPI) GetMatches(ctx context.Context, championshipID int, team, stage string) ([]model.Match, error) {
+	return m.getMatches(ctx, championshipID, team, stage)
 }
 
 func (m *mockChampionshipAPI) GetMatch(ctx context.Context, matchID int) (*model.Match, error) {
@@ -27,6 +27,7 @@ func (m *mockChampionshipAPI) GetMatch(ctx context.Context, matchID int) (*model
 
 type mockFanRepository struct {
 	create                func(ctx context.Context, fan *model.Fan) error
+	getAll                func(ctx context.Context) ([]model.Fan, error)
 	getByTeamID           func(ctx context.Context, teamID int) ([]model.Fan, error)
 	getByUserID           func(ctx context.Context, userID int) ([]model.Fan, error)
 	deleteByUserIDAndTeam func(ctx context.Context, userID int, team string) error
@@ -34,6 +35,10 @@ type mockFanRepository struct {
 
 func (m *mockFanRepository) Create(ctx context.Context, fan *model.Fan) error {
 	return m.create(ctx, fan)
+}
+
+func (m *mockFanRepository) GetAll(ctx context.Context) ([]model.Fan, error) {
+	return m.getAll(ctx)
 }
 
 func (m *mockFanRepository) GetByTeamID(ctx context.Context, teamID int) ([]model.Fan, error) {
