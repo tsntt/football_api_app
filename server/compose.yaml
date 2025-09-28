@@ -6,6 +6,7 @@ services:
     ports:
       - "4000:4000"
     environment:
+      SERVER_HOST: ${SERVER_HOST:-0.0.0.0}
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
@@ -17,9 +18,19 @@ services:
       FOOTBALL_API_TOKEN: ${FOOTBALL_API_TOKEN}
       FOOTBALL_API_URL: ${FOOTBALL_API_URL:-https://api.football-data.org/v4}
       SERVER_PORT: ${SERVER_PORT:-4000}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAILGUN_FROM: ${MAILGUN_FROM}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM_PHONE: ${TWILIO_FROM_PHONE}
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:18-alpine
