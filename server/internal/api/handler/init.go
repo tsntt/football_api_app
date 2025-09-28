@@ -28,14 +28,15 @@ func NewHandlers(
 }
 
 func SetupRoutes(e *echo.Echo, handlers *Handlers, authMiddleware *middleware.AuthMiddleware) {
+	apiV1 := e.Group("/api/v1")
 	// Public
-	auth := e.Group("/auth")
+	auth := apiV1.Group("/auth")
 	auth.POST("/register", handlers.User.Register)
 	auth.POST("/login", handlers.User.Login)
 	auth.POST("/logout", handlers.User.Logout)
 
 	// Protected
-	protected := e.Group("")
+	protected := apiV1.Group("")
 	protected.Use(authMiddleware.JWTAuth())
 
 	// Championship
@@ -44,9 +45,11 @@ func SetupRoutes(e *echo.Echo, handlers *Handlers, authMiddleware *middleware.Au
 
 	// Fan
 	protected.POST("/fans", handlers.Fan.Subscribe)
+	protected.DELETE("/fans", handlers.Fan.Unsubscribe)
+	protected.GET("/fans", handlers.Fan.GetSubscriptions)
 
 	// Protected [Only Admin]
-	admin := e.Group("/admin")
+	admin := apiV1.Group("/admin")
 	admin.Use(authMiddleware.JWTAuth())
 	admin.Use(authMiddleware.AdminAuth())
 	admin.GET("", handlers.Admin.GetMatches)

@@ -27,9 +27,10 @@ func (m *mockChampionshipAPI) GetMatch(ctx context.Context, matchID int) (*model
 }
 
 type mockFanRepository struct {
-	create      func(ctx context.Context, fan *model.Fan) error
-	getByTeamID func(ctx context.Context, teamID int) ([]model.Fan, error)
-	getByUserID func(ctx context.Context, userID int) ([]model.Fan, error)
+	create                func(ctx context.Context, fan *model.Fan) error
+	getByTeamID           func(ctx context.Context, teamID int) ([]model.Fan, error)
+	getByUserID           func(ctx context.Context, userID int) ([]model.Fan, error)
+	deleteByUserIDAndTeam func(ctx context.Context, userID int, team string) error
 }
 
 func (m *mockFanRepository) Create(ctx context.Context, fan *model.Fan) error {
@@ -42,6 +43,10 @@ func (m *mockFanRepository) GetByTeamID(ctx context.Context, teamID int) ([]mode
 
 func (m *mockFanRepository) GetByUserID(ctx context.Context, userID int) ([]model.Fan, error) {
 	return m.getByUserID(ctx, userID)
+}
+
+func (m *mockFanRepository) DeleteByUserIDAndTeam(ctx context.Context, userID int, team string) error {
+	return m.deleteByUserIDAndTeam(ctx, userID, team)
 }
 
 type mockBroadcastRepository struct {

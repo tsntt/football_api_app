@@ -48,3 +48,23 @@ func (r *FanRepository) GetByUserID(ctx context.Context, userID int) ([]model.Fa
 
 	return fans, nil
 }
+
+func (r *FanRepository) DeleteByUserIDAndTeam(ctx context.Context, userID int, team string) error {
+	query := `DELETE FROM fans WHERE user_id = $1 AND team = $2`
+
+	result, err := r.db.ExecContext(ctx, query, userID, team)
+	if err != nil {
+		return fmt.Errorf("failed to delete fan subscription: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("subscription not found")
+	}
+
+	return nil
+}

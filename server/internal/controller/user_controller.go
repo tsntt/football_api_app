@@ -66,6 +66,7 @@ func (c *UserController) Login(ctx context.Context, req *dto.UserRequest) (*dto.
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
+	// INFO: in production is recomended to use token and refresh token
 	token, err := c.jwtService.GenerateToken(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)

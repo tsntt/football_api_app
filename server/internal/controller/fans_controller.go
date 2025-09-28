@@ -40,3 +40,29 @@ func (c *FanController) Subscribe(ctx context.Context, req *dto.FanRequest) (*dt
 		Message: fmt.Sprintf("Subscribed to %s", req.TeamName),
 	}, nil
 }
+
+func (c *FanController) Unsubscribe(ctx context.Context, userID int, req *dto.UnsubscribeRequest) (*dto.APIResponse, error) {
+	if err := c.validator.Struct(req); err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
+	}
+
+	if err := c.fanRepo.DeleteByUserIDAndTeam(ctx, userID, req.TeamID); err != nil {
+		return nil, fmt.Errorf("failed to unsubscribe from team: %w", err)
+	}
+
+	return &dto.APIResponse{
+		Message: "Unsubscribed!",
+		Data: map[string]interface{}{
+			"team_id": req.TeamID,
+		},
+	}, nil
+}
+
+func (c *FanController) GetSubscriptions(ctx context.Context, userID int) ([]model.Fan, error) {
+	fans, err := c.fanRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user subscriptions: %w", err)
+	}
+
+	return fans, nil
+}
