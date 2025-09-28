@@ -10,6 +10,8 @@ type Config struct {
 	JWT         JWTConfig
 	FootballAPI FootballAPIConfig
 	Server      ServerConfig
+	EmailAPI    EmailAPIConfig
+	SMSAPI      SMSAPIConfig
 }
 
 type DatabaseConfig struct {
@@ -32,7 +34,19 @@ type FootballAPIConfig struct {
 }
 
 type ServerConfig struct {
+	Host string
 	Port string
+}
+
+type EmailAPIConfig struct {
+	APIKey string
+	From   string
+}
+
+type SMSAPIConfig struct {
+	AccountSID string
+	APIKey     string
+	From       string
 }
 
 func Load() *Config {
@@ -54,7 +68,17 @@ func Load() *Config {
 			URL:   getEnv("FOOTBALL_API_URL", "https://api.football-data.org/v4"),
 		},
 		Server: ServerConfig{
+			Host: getEnv("SERVER_DOMAIN", "127.0.0.1"),
 			Port: getEnv("SERVER_PORT", "4000"),
+		},
+		EmailAPI: EmailAPIConfig{
+			APIKey: getEnv("MAIL_API_KEY", ""),
+			From:   getEnv("MAIL_FROM", ""),
+		},
+		SMSAPI: SMSAPIConfig{
+			AccountSID: getEnv("TWILIO_ACCOUNT_SID", ""),
+			APIKey:     getEnv("TWILIO_API_KEY", ""),
+			From:       getEnv("TWILIO_FROM", ""),
 		},
 	}
 }

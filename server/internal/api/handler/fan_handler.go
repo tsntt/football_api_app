@@ -28,7 +28,6 @@ func (h *FanHandler) Subscribe(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	//Use user_id from JWT security reasons
 	req.UserID = user.UserID
 
 	response, err := h.controller.Subscribe(c.Request().Context(), &req)
@@ -37,4 +36,37 @@ func (h *FanHandler) Subscribe(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+func (h *FanHandler) Unsubscribe(c echo.Context) error {
+	user, err := middleware.GetUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	var req dto.UnsubscribeRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	response, err := h.controller.Unsubscribe(c.Request().Context(), user.UserID, &req)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *FanHandler) GetSubscriptions(c echo.Context) error {
+	user, err := middleware.GetUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	subscriptions, err := h.controller.GetSubscriptions(c.Request().Context(), user.UserID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, subscriptions)
 }

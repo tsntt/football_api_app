@@ -36,3 +36,7 @@ type FanRequest struct {
 	TeamID   int    `json:"team_id" validate:"required"`
 	TeamName string `json:"team_name" validate:"required"`
 }
+
+type UnsubscribeRequest struct {
+	TeamID string `json:"team_id" validate:"required"`
+}
