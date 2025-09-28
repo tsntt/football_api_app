@@ -14,7 +14,7 @@ Registers a new user.
 
 ```json
 {
-  "username": "string",
+  "name": "string",
   "password": "string"
 }
 ```
@@ -35,7 +35,7 @@ Logs in a user.
 
 ```json
 {
-  "username": "string",
+  "name": "string",
   "password": "string"
 }
 ```
