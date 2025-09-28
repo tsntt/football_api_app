@@ -6,7 +6,7 @@ This document provides a detailed description of the API endpoints.
 
 ## Authentication
 
-### `POST /auth/register`
+### `POST api/v1/auth/register`
 
 Registers a new user.
 
@@ -27,7 +27,7 @@ Registers a new user.
 }
 ```
 
-### `POST /auth/login`
+### `POST api/v1/auth/login`
 
 Logs in a user.
 
@@ -48,7 +48,7 @@ Logs in a user.
 }
 ```
 
-### `POST /auth/logout`
+### `POST api/v1/auth/logout`
 
 Logs out a user.
 
@@ -67,7 +67,7 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
 
 ## Championships
 
-### `GET /championship`
+### `GET api/v1/championship`
 
 Retrieves a list of all championships.
 
@@ -96,7 +96,7 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
 ]
 ```
 
-### `GET /championship/:id/matches`
+### `GET api/v1/championship/:id/matches`
 
 Retrieves a list of matches for a specific championship.
 
@@ -162,7 +162,8 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
             "currentMatchday": 24,
             "winner": null
         }
-    }
+    },
+    ...
 ]
 ```
 
@@ -170,7 +171,7 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
 
 ## Fans
 
-### `POST /fans`
+### `POST api/v1/fans`
 
 Subscribes a fan to a championship. This endpoint requires authentication.
 
@@ -201,7 +202,7 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
 
 These endpoints require administrator privileges.
 
-### `GET /admin`
+### `GET api/v1/admin/`
 
 Retrieves a list of all matches.
 
@@ -262,11 +263,24 @@ Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
             "currentMatchday": 24,
             "winner": null
         }
-    }
+    },
+    ...
 ]
 ```
 
-### `POST /admin/broadcast/:match_id`
+```json
+// ws will update this 
+{
+    "channel_id": 1,
+    "total_sent": 10,
+    "sent_count": 5,
+    "failed_count": 5,
+    "is_completed": true,
+    "error_details": []
+}
+```
+
+### `POST api/v1/admin/broadcast/:match_id`
 
 Broadcasts a match.
 

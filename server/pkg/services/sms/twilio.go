@@ -1,9 +1,11 @@
-package services
+package sms
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/tsntt/footballapi/pkg/broadcast"
 	"github.com/twilio/twilio-go"
 	api "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -33,7 +35,13 @@ func NewTwilioService(accountSID, authToken, fromPhone, webhook string) *TwilioS
 	return ts
 }
 
-func (t *TwilioService) SendSMS(to, message string) error {
+func (t *TwilioService) Send(ctx context.Context, subscription broadcast.Subscription, message broadcast.Message) error {
+	msg := t.formatMessage(fmt.Sprintf("%s: %s", message.Title, message.Content))
+
+	return t.sendSMS(subscription.Address, msg)
+}
+
+func (t *TwilioService) sendSMS(to, message string) error {
 	if !t.isValidPhoneNumber(to) {
 		return fmt.Errorf("invalid phone number format: %s", to)
 	}
@@ -76,7 +84,7 @@ func (t *TwilioService) SendSMS(to, message string) error {
 	return nil
 }
 
-func (t *TwilioService) SendBulkSMS(recipients []string, message string) error {
+func (t *TwilioService) sendBulkSMS(recipients []string, message string) error {
 	if len(recipients) == 0 {
 		return fmt.Errorf("no recipients provided")
 	}
@@ -85,7 +93,7 @@ func (t *TwilioService) SendBulkSMS(recipients []string, message string) error {
 	successCount := 0
 
 	for _, recipient := range recipients {
-		if err := t.SendSMS(recipient, message); err != nil {
+		if err := t.sendSMS(recipient, message); err != nil {
 			errors = append(errors, fmt.Errorf("failed to send to %s: %w", recipient, err))
 		} else {
 			successCount++

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/tsntt/footballapi/internal/model"
-	"github.com/tsntt/footballapi/pkg/broadcaster"
 )
 
 // Mocks
@@ -65,19 +64,6 @@ func (m *mockBroadcastRepository) GetByMatchID(ctx context.Context, matchID int)
 
 func (m *mockBroadcastRepository) Update(ctx context.Context, broadcast *model.BroadcastMessage) error {
 	return m.update(ctx, broadcast)
-}
-
-type mockBroadcastService struct {
-	sendNotification       func(ctx context.Context, message string, targets []broadcaster.NotificationTarget) error
-	sendNotificationWithID func(ctx context.Context, notificationID, message string, targets []broadcaster.NotificationTarget) error
-}
-
-func (m *mockBroadcastService) SendNotification(ctx context.Context, message string, targets []broadcaster.NotificationTarget) error {
-	return m.sendNotification(ctx, message, targets)
-}
-
-func (m *mockBroadcastService) SendNotificationWithID(ctx context.Context, notificationID, message string, targets []broadcaster.NotificationTarget) error {
-	return m.sendNotificationWithID(ctx, notificationID, message, targets)
 }
 
 type mockUserRepository struct {

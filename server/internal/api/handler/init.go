@@ -52,6 +52,6 @@ func SetupRoutes(e *echo.Echo, handlers *Handlers, authMiddleware *middleware.Au
 	admin := apiV1.Group("/admin")
 	admin.Use(authMiddleware.JWTAuth())
 	admin.Use(authMiddleware.AdminAuth())
-	admin.GET("", handlers.Admin.GetMatches)
+	admin.GET("/", handlers.Admin.GetMatches)
 	admin.POST("/broadcast/:match_id", handlers.Admin.BroadcastMatch)
 }

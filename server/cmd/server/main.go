@@ -14,8 +14,10 @@ import (
 	"github.com/tsntt/footballapi/internal/api/middleware"
 	"github.com/tsntt/footballapi/internal/config"
 	"github.com/tsntt/footballapi/internal/controller"
-	"github.com/tsntt/footballapi/pkg/broadcaster"
+	"github.com/tsntt/footballapi/pkg/broadcast"
 	consumer "github.com/tsntt/footballapi/pkg/external_api_consumer"
+	"github.com/tsntt/footballapi/pkg/services/email"
+	"github.com/tsntt/footballapi/pkg/services/sms"
 	"github.com/tsntt/footballapi/pkg/utils"
 
 	echomiddleware "github.com/labstack/echo/v4/middleware"
@@ -47,7 +49,12 @@ func main() {
 	// init services
 	jwtService := utils.NewJWTService(cfg.JWT.Secret, cfg.JWT.ExpiresHours)
 	footballAPI := consumer.NewFootballAPIClient(cfg.FootballAPI.URL, cfg.FootballAPI.Token)
-	broadcastService := broadcaster.NewBroadcastService(5)
+	emailService := email.NewMailgunService(cfg.Server.Host, cfg.EmailAPI.APIKey, cfg.EmailAPI.From)
+	smsService := sms.NewTwilioService(cfg.SMSAPI.AccountSID, cfg.SMSAPI.APIKey, cfg.SMSAPI.From, "")
+	broadcastService := broadcast.NewBroadcastService()
+
+	broadcastService.RegisterNotifier(broadcast.Email, emailService)
+	broadcastService.RegisterNotifier(broadcast.SMS, smsService)
 
 	// init controllers
 	userController := controller.NewUserController(userRepo, jwtService)
@@ -105,8 +112,6 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	broadcastService.Stop()
 
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)

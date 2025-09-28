@@ -72,8 +72,8 @@ func Load() *Config {
 			Port: getEnv("SERVER_PORT", "4000"),
 		},
 		EmailAPI: EmailAPIConfig{
-			APIKey: getEnv("MAIL_API_KEY", ""),
-			From:   getEnv("MAIL_FROM", ""),
+			APIKey: getEnv("MAILGUN_API_KEY", ""),
+			From:   getEnv("MAILGUN_FROM", ""),
 		},
 		SMSAPI: SMSAPIConfig{
 			AccountSID: getEnv("TWILIO_ACCOUNT_SID", ""),

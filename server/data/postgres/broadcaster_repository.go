@@ -20,12 +20,12 @@ func NewBroadcastRepository(db *sqlx.DB) *BroadcastRepository {
 
 func (r *BroadcastRepository) Create(ctx context.Context, broadcast *model.BroadcastMessage) error {
 	query := `
-		INSERT INTO broadcast_messages (match_id, message, status) 
+		INSERT INTO broadcasted_messages (match_id, message_content_hash, status) 
 		VALUES ($1, $2, $3) 
 		RETURNING id, sent_at`
 
-	err := r.db.QueryRowContext(ctx, query, broadcast.MatchID, broadcast.Message, broadcast.Status).
-		Scan(&broadcast.ID, &broadcast.SentAt)
+	err := r.db.QueryRowContext(ctx, query, broadcast.MatchID, broadcast.MessageContentHash, broadcast.Status).
+		Scan(&broadcast.ID, &broadcast.CreatedAt)
 
 	if err != nil {
 		return fmt.Errorf("failed to create broadcast message: %w", err)
@@ -36,7 +36,7 @@ func (r *BroadcastRepository) Create(ctx context.Context, broadcast *model.Broad
 
 func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*model.BroadcastMessage, error) {
 	broadcast := &model.BroadcastMessage{}
-	query := `SELECT id, match_id, message, sent_at, status FROM broadcast_messages WHERE match_id = $1`
+	query := `SELECT id, match_id, message_content_hash, created_at, status FROM broadcasted_messages WHERE match_id = $1`
 
 	err := r.db.GetContext(ctx, broadcast, query, matchID)
 	if err != nil {
@@ -50,9 +50,9 @@ func (r *BroadcastRepository) GetByMatchID(ctx context.Context, matchID int) (*m
 }
 
 func (r *BroadcastRepository) Update(ctx context.Context, broadcast *model.BroadcastMessage) error {
-	query := `UPDATE broadcast_messages SET message = $1, status = $2 WHERE id = $3`
+	query := `UPDATE broadcasted_messages SET status = $2 WHERE id = $3`
 
-	_, err := r.db.ExecContext(ctx, query, broadcast.Message, broadcast.Status, broadcast.ID)
+	_, err := r.db.ExecContext(ctx, query, broadcast.Status, broadcast.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update broadcast message: %w", err)
 	}

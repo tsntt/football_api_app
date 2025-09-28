@@ -1,18 +1,17 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS broadcast_messages (
+CREATE TABLE IF NOT EXISTS broadcasted_messages (
     id SERIAL PRIMARY KEY,
     match_id INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    message_content_hash varchar(64) NOT NULL UNIQUE,
     status VARCHAR(20) DEFAULT 'sent',
-    UNIQUE(match_id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
-CREATE INDEX idx_broadcast_match_id ON broadcast_messages(match_id);
+CREATE INDEX idx_duplicate_check ON notification_logs (match_id, message_content_hash, created_at);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE broadcast_messages;
+DROP TABLE broadcasted_messages;
 -- +goose StatementEnd
