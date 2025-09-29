@@ -136,3 +136,10 @@ pnpm install
 pnpm run dev
 ```
 
+## Choices
+- I use next.js on frontend because its the company's choice
+- On the backend I choose to apply Clean Architecture with some more reasonable naming conventions, clean architecture allows modules to be replaced without affecting the rest of the application, and it's easier to test and maintain.
+- Since its a demo project I did not made 100% test coverage, but the coverage shows what needs to be shown.
+- docker images are optimized for production, but they can be better using distroless images.
+- I made auth token as requested on PDF, but note that it's better to use token in secure cookies with httpOnly.
+- For a production environment would be nice to use a caching solution too.
